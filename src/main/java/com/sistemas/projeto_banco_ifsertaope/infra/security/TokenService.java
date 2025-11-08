@@ -1,9 +1,10 @@
-package com.sistemas.projeto_banco_ifsertaope.infra.security;
+ package com.sistemas.projeto_banco_ifsertaope.infra.security;
 
 import com.auth0.jwt.JWT;
 import com.auth0.jwt.algorithms.Algorithm;
 import com.auth0.jwt.exceptions.JWTCreationException;
-import com.sistemas.projeto_banco_ifsertaope.domain.user.User;
+import com.auth0.jwt.exceptions.JWTVerificationException;
+import com.sistemas.projeto_banco_ifsertaope.domain.user.Cliente;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Service;
 
@@ -12,13 +13,13 @@ import java.time.LocalDateTime;
 import java.time.ZoneOffset;
 
 @Service
-public class TokenServicy {
+public class TokenService {
 
     @Value("${token.personalizado.para.criacao.da.chave.de.autenticacao}")
     private String chavePrivada;
 
 
-    public String gerandoToken(User user){
+    public String generateToken(Cliente user){
         try {
 
             Algorithm algorithm = Algorithm.HMAC256(chavePrivada);
@@ -33,6 +34,19 @@ public class TokenServicy {
 
         } catch (JWTCreationException e) {
             throw new RuntimeException(e);
+        }
+    }
+
+    public String validateToken(String token){
+        try {
+            Algorithm algorithm = Algorithm.HMAC256(chavePrivada);
+            return JWT.require(algorithm)
+                    .withIssuer("autenticacao-login")
+                    .build()
+                    .verify(token)
+                    .getSubject();
+        } catch (JWTVerificationException e) {
+            throw new IllegalArgumentException("Token inválido ou expirado.", e);
         }
     }
 
